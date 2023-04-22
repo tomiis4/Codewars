@@ -1,55 +1,84 @@
-//package kata
-package main
+package kata
 
-import "fmt"
+func contains(ij []int, arr [][]int) bool {
+	for _, elem := range arr {
+		if elem[0] == ij[0] && elem[1] == ij[1] {
+			return true
+		}
+	}
 
-// row => at end of the row => down => at down go left => at left go up -1
-// res => {1,2,3,6,9,8,7,4,5}
-
-// {
-//	{1, 2, 3}, 
-// {4, 5, 6}, 
-// {7, 8, 9}
-// }
-
-func oneSquare(arr [][]int) []int {
-  res := []int{}
-  height := len(arr)
-  width := len(arr[0])
-
-  // top (1,2,3)
-  for i:=0; i < width; i++ {
-	fmt.Println("top: ", arr[0][i])
-    res = append(res, arr[0][i])
-  }
-  
-  // right
-  for i:=1; i < height; i++ {
-	fmt.Println("right: ", arr[i][width-1])
-    res = append(res, arr[i][width-1])
-  }
-  
-  // bottom
-  for i:=width-2; i > 0; i-- {
-	fmt.Println("bottom: ", arr[width-1][i])
-    res = append(res, arr[width-1][i])
-  }
-  
-
-  // left
-  for i:=height-1; i > 0; i-- {
-	fmt.Println("left: ", arr[i][0])
-   res = append(res, arr[i][0])
-  }
-  
-  return res
+	return false
 }
 
-func Snail(snaipMap [][]int) {
-  fmt.Println(oneSquare(snaipMap))
+func removeIdx(arr [][]int, indexes [][]int) [][]int {
+	tempArr := [][]int{}
+
+	for i := range arr {
+		tempRow := []int{}
+
+		for j, value := range arr[i] {
+			if !contains([]int{i,j}, indexes) {
+				tempRow = append(tempRow, value)
+			}
+		}
+
+		if len(tempRow) > 0 {
+			tempArr = append(tempArr, tempRow)
+		}
+	}
+
+	return tempArr
 }
 
-func main() {
-	Snail([][]int{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}})
-	fmt.Println("Expected: {1, 2, 3, 6, 9, 8, 7, 4, 5}")
+func oneSquare(arr [][]int) ([]int, [][]int) {
+	res := []int{}
+	remove := [][]int{}
+
+	height := len(arr)
+	width := len(arr[0])
+
+	// top
+	for i:=0; i < width; i++ {
+		res = append(res, arr[0][i])
+		remove = append(remove, []int{0, i})
+	}
+
+	// right
+	for i:=1; i < height; i++ {
+		res = append(res, arr[i][width-1])
+		remove = append(remove, []int{i, width-1})
+	}
+
+	// bottom
+	for i:=width-2; i > 0; i-- {
+		res = append(res, arr[width-1][i])
+		remove = append(remove, []int{width-1, i})
+	}
+
+	// left
+	for i:=height-1; i > 0; i-- {
+		res = append(res, arr[i][0])
+		remove = append(remove, []int{i, 0})
+	}
+
+	return res, removeIdx(arr, remove)
+}
+
+func Snail(snaipMap [][]int) []int {
+	array := [][]int{}
+	result := []int{}
+
+	res, arr := oneSquare(snaipMap)
+	result = res
+	array = arr
+
+	for {
+		if len(array) == 0 { break }
+		tRes, tArr := oneSquare(array)
+
+		result = append(result, tRes...)
+		array = tArr
+	}
+
+	return result
 }
