@@ -6,53 +6,70 @@ const swap = (a:number, b:number) => {
 	return [b,a]
 };
 
-const sortRest = (a: number[]): number[] => {
-	return a.sort((c,b) => {
-		return b-c;
-	})
-}
 
-const appendRest = (arr: number[], append: number[]): number[] => {
-	let revArr = arr.reverse();
-	const revAppend = append;
-
-	revAppend.forEach((elem, index) => {
-		revArr[index] = elem;
-	});
-
-	return revArr.reverse();
-}
-
+// TODO
+// 1) Take biggest number from i=2 in reversed
+//		- if not, i++
+//	2) swap i-1 with that number
 function nextBigger(n: number): number {
-	let restNums: number[] = [];
-	let N = 0;
-	let ns = n
+	let numbers = n
 		.toString()
 		.split('')
 		.map(e => parseInt(e));
 
-	while (ns[N+1] != undefined) {
-		ns.reverse();
+	numbers.reverse();
 
-		if (ns[N] > ns[N+1]) {
-			[ns[N], ns[N+1]] = swap(ns[N], ns[N+1]);
-			ns.reverse();
-
-			restNums = ns.slice(-(N+1))
-
+	// 1)
+	let i = 0;
+	while (numbers[i+1] != undefined) {
+		if (numbers[i] > numbers[i+1]) {
+			[numbers[i], numbers[i+1]] = swap(numbers[i], numbers[i+1])
 			break;
 		}
-
-		ns.reverse();
-		N++;
+		i++;
 	}
 
-	console.log(ns, restNums)
-	const result = toInt(appendRest(ns, restNums))
+	// 2)
 
-	if (result > n) return result;
+	let sorted = numbers
+		.slice(0, i+1)
+		.sort((a,b) => b-a)
+		.concat(numbers.slice(i+1))
+		.reverse();
+
+
+	if (toInt(sorted) > n) return toInt(sorted);
 	return -1;
 }
 
-// TODO: sort biggest number once, then "rest" from that number sort low
-// console.log(nextBigger(1234567890)) // 1234567908 
+console.log(nextBigger(459853))
+
+if (nextBigger(1234567890) == 1234567908) {
+	console.log("\n  Test 1 passed")
+} else {
+	console.log("\n  [X] Test 1 failed")
+}
+
+if (nextBigger(414) == 441) {
+	console.log("  Test 2 passed")
+} else {
+	console.log("  [X] Test 2 failed")
+}
+
+if (nextBigger(9876543210) == -1) {
+	console.log("  Test 3 passed")
+} else {
+	console.log("  [X] Test 3 failed")
+}
+
+if (nextBigger(459853) == 483559) {
+	console.log("  Test 4 passed")
+} else {
+	console.log("  [X] Test 4 failed")
+}
+
+if (nextBigger(144) == 414) {
+	console.log("  Test 5 passed\n")
+} else {
+	console.log("  [X] Test 5 failed\n")
+}
