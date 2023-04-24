@@ -8,9 +8,9 @@ const swap = (a:number, b:number) => {
 
 
 // TODO
-// 1) Take biggest number from i=2 in reversed
-//		- if not, i++
-//	2) swap i-1 with that number
+// 1) reverse numbers, swap first numbers where on left is bigger than on right
+// 2) now sort lowest on the left, till you go to the swapped
+// 3) reverse and check if is bigger
 function nextBigger(n: number): number {
 	let numbers = n
 		.toString()
@@ -22,7 +22,7 @@ function nextBigger(n: number): number {
 	// 1)
 	let i = 0;
 	while (numbers[i+1] != undefined) {
-		if (numbers[i] > numbers[i+1]) {
+		if (numbers[i] > numbers[i+1]) { //FIXME: find larger number, follow example 4 (failed)
 			[numbers[i], numbers[i+1]] = swap(numbers[i], numbers[i+1])
 			break;
 		}
@@ -30,6 +30,7 @@ function nextBigger(n: number): number {
 	}
 
 	// 2)
+// 	console.log(numbers.slice(0,i+1))
 
 	let sorted = numbers
 		.slice(0, i+1)
@@ -42,9 +43,9 @@ function nextBigger(n: number): number {
 	return -1;
 }
 
-console.log(nextBigger(459853))
-
-if (nextBigger(1234567890) == 1234567908) {
+// swap if on right with smaller on left
+// sort rest to the smallest
+if (nextBigger(7890) == 7908) {
 	console.log("\n  Test 1 passed")
 } else {
 	console.log("\n  [X] Test 1 failed")
