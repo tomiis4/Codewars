@@ -43,8 +43,6 @@ function nextBigger(n: number): number {
 	return -1;
 }
 
-// swap if on right with smaller on left
-// sort rest to the smallest
 if (nextBigger(7890) == 7908) {
 	console.log("\n  Test 1 passed")
 } else {
