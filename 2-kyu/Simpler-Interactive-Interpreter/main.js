@@ -40,295 +40,107 @@ class Interpreter {
 		}).join('')
 	}
 
-eval(expr) {
-	let groups = [];
+	eval(expr) {
+		// convert 3-5 to 3 - 5
+		expr = expr.replace(/(\d*)(\+|\-|\*|\|)(\d*)/g, '$1 $2 $3')
+		let groups = [];
 
-	// get groups
-	const groupRegex = /\(([^()]*)\)/g;
-	while (expr.match(groupRegex) != null) {
-		let splitGroups = expr.match(groupRegex)
+		// get groups
+		const groupRegex = /\(([^()]*)\)/;
+		while (expr.match(groupRegex) != null) {
+			let splitGroups = expr.match(groupRegex)
 
-		groups.push(...splitGroups)
-		expr = expr.replace(groupRegex, `GROUP_${groups.length-1}`)
-	}
-
-	// calculate groups
-	groups = groups.map(group => {
-		if (group.includes('GROUP_')) {
-			group = group.replace(/GROUP_(\d+)/g, (_, groupCapture) => groups[groupCapture]);
+			groups.push(splitGroups[0])
+			expr = expr.replace(groupRegex, `GROUP_${groups.length-1}`)
 		}
 
-		group = group.replace(/\(|\)/gm, ''); // remove ()
-		group = this.calculate_expr(group)
-
-		return group;
-	})
-
-
-	// insert groups to main
-	if (expr.includes('GROUP_')) {
-		expr = expr.replace(/GROUP_(\d+)/g, (_, groupCapture) => groups[groupCapture]);
-	}
-
-	expr = this.calculate_expr(expr)
-
-	console.log(expr, groups)
-}
-
-calculate_expr(expr) {
-	let removeIdxs = [];
-
-	// *
-	if (expr.includes('*')) {
-		expr = expr.split(' ').map((nums, numIdx) => {
-			if (nums == "*") {
-				const a = parseFloat(expr.split(' ')[numIdx - 1])
-				const b = parseFloat(expr.split(' ')[numIdx + 1])
-
-				removeIdxs.push(numIdx-1, numIdx+1)
-				return a * b
-			} else {
-				return nums
+		// calculate groups
+		groups.forEach((group, gIdx) => {
+			if (group.includes('GROUP_')) {
+				group = group.replace(/GROUP_(\d+)/g, (_, groupCapture) => groups[groupCapture]);
 			}
-		}).join(' ');
-	}
 
-	// remove indexes
-	expr = expr.split(' ').filter((_, exprIdx) => {
-		return !removeIdxs.includes(exprIdx);
-	}).join(' ');
-	removeIdxs = [];
+			group = group.replace(/\(|\)/gm, ''); // remove ()
+			group = this.calculate_expr(group)
 
-	// /
-	if (expr.includes('/')) {
-		expr = expr.split(' ').map((nums, numIdx) => {
-			if (nums == "/") {
-				const a = parseFloat(expr.split(' ')[numIdx - 1])
-				const b = parseFloat(expr.split(' ')[numIdx + 1])
-
-				removeIdxs.push(numIdx-1, numIdx+1)
-				return a / b
-			} else {
-				return nums
-			}
-		}).join(' ');
-	}
-
-	// remove indexes
-	expr = expr.split(' ').filter((_, exprIdx) => {
-		return !removeIdxs.includes(exprIdx);
-	}).join(' ');
-	removeIdxs = [];
-
-	// +
-	if (expr.includes('+')) {
-		expr = expr.split(' ').map((nums, numIdx) => {
-			if (nums == "+") {
-				const a = parseFloat(expr.split(' ')[numIdx - 1])
-				const b = parseFloat(expr.split(' ')[numIdx + 1])
-
-				removeIdxs.push(numIdx-1, numIdx+1)
-				return a + b
-			} else {
-				return nums
-			}
-		}).join(' ');
-	}
-	// remove indexes
-	expr = expr.split(' ').filter((_, exprIdx) => {
-		return !removeIdxs.includes(exprIdx);
-	}).join(' ');
-	removeIdxs = [];
-
-	// -
-	if (expr.includes('-')) {
-		expr = expr.split(' ').map((nums, numIdx) => {
-			if (nums == "-") {
-				const a = parseFloat(expr.split(' ')[numIdx - 1])
-				const b = parseFloat(expr.split(' ')[numIdx + 1])
-
-				removeIdxs.push(numIdx-1, numIdx+1)
-				return a - b
-			} else {
-				return nums
-			}
-		}).join(' ');
-	}
-	// remove indexes
-	expr = expr.split(' ').filter((_, exprIdx) => {
-		return !removeIdxs.includes(exprIdx);
-	}).join(' ');
-	removeIdxs = [];
-
-	// %
-	if (expr.includes('%')) {
-		expr = expr.split(' ').map((nums, numIdx) => {
-			if (nums == "%") {
-				const a = parseFloat(expr.split(' ')[numIdx - 1])
-				const b = parseFloat(expr.split(' ')[numIdx + 1])
-
-				removeIdxs.push(numIdx-1, numIdx+1)
-				return a % b
-			} else {
-				return nums
-			}
-		}).join(' ');
-	}
-	// remove indexes
-	expr = expr.split(' ').filter((_, exprIdx) => {
-		return !removeIdxs.includes(exprIdx);
-	}).join(' ');
-	removeIdxs = [];
-
-	return parseFloat(expr)
-}
-}
+			groups[gIdx] = group;
+		})
 
 
-let comp = new Interpreter
-// console.log(comp.input('x = (8 - (4 + 2)) * 3'))
-// console.log(comp.input('x = 4'))
-// console.log(comp.input('x'))
-// console.log(comp.input('x + 3'))
-// console.log(comp.input('2 * 3'))
-// console.log(comp.input('(8 - (4 + 2)) * 3'))
-
-
-
-
-
-
-
-function eval(expr) {
-	// convert 3-5 to 3 - 5
-	expr = expr.replace(/(\d*)(\+|\-|\*|\|)(\d*)/g, '$1 $2 $3')
-	let groups = [];
-
-	// get groups
-	const groupRegex = /\(([^()]*)\)/g;
-	while (expr.match(groupRegex) != null) {
-		let splitGroups = expr.match(groupRegex)
-
-		groups.push(...splitGroups)
-		expr = expr.replace(groupRegex, `GROUP_${groups.length-1}`)
-	}
-
-	// calculate groups
-	groups = groups.map(group => {
-		if (group.includes('GROUP_')) {
-			group = group.replace(/GROUP_(\d+)/g, (_, groupCapture) => groups[groupCapture]);
+		// insert groups to main
+		if (expr.includes('GROUP_')) {
+			expr = expr.replace(/GROUP_(\d+)/g, (_, groupCapture) => groups[groupCapture]);
 		}
 
-		group = group.replace(/\(|\)/gm, ''); // remove ()
-		group = calculate_expr(group)
+		expr = this.calculate_expr(expr)
 
-		return group;
-	})
-
-
-	// insert groups to main
-	if (expr.includes('GROUP_')) {
-		expr = expr.replace(/GROUP_(\d+)/g, (_, groupCapture) => groups[groupCapture]);
+		return parseFloat(expr)
 	}
 
-	expr = calculate_expr(expr)
+	calculate_expr(expr) {
+		// fix double spaces
+		expr = expr.replace(/  /g, ' ');
 
-	console.log(expr, groups)
-}
+		// 1. loop -> calculate */%
+		// 2. loop -> calculate +-
 
-function change(s, i, v) {
-	s = s.split(' ');
-	s[i] = v;
+		// 1. loop
+		let removeIdxs = [];
+		for (let elemIdx=0; elemIdx < expr.split(' ').length; elemIdx++) {
+			const elem = expr.split(' ')[elemIdx];
 
-	return s.join(' ');
-}
+			if ("*/%".includes(elem)) {
+				const a = parseFloat(expr.split(' ')[elemIdx - 1])
+				const b = parseFloat(expr.split(' ')[elemIdx + 1])
 
-function remove(s, idxs) {
-	s = s.split(' ');
+				if (elem == "*") {
+					expr = this.change(expr, elemIdx+1, a*b);
+				} else if (elem == "/") {
+					expr = this.change(expr, elemIdx+1, a/b);
+				} else if (elem == "%") {
+					expr = this.change(expr, elemIdx+1, a%b);
+				}
 
-	idxs.forEach(idx => {
-		s.splice(idx, 1)
-	})
-
-	return s.join(' ');
-}
-
-function calculate_expr(expr) {
-// 1. loop -> calculate */
-// 2. loop -> calculate +-
-
-	// 1. loop
-	let removeIdxs = [];
-	for (let elemIdx=0; elemIdx < expr.split(' ').length; elemIdx++) {
-		const elem = expr.split(' ')[elemIdx];
-
-		if ("*/".includes(elem)) {
-			const a = parseFloat(expr.split(' ')[elemIdx - 1])
-			const b = parseFloat(expr.split(' ')[elemIdx + 1])
-
-			if (elem == "*") {
-				expr = change(expr, elemIdx+1, a*b);
-			} else if (elem == "/") {
-				expr = change(expr, elemIdx+1, a/b);
+				removeIdxs.push(elemIdx-1, elemIdx)
 			}
-
-			removeIdxs.push(elemIdx-1, elemIdx)
 		}
-	}
 
-	// remove indexes
-	expr = expr.split(' ').filter((_, exprIdx) => {
-		return !removeIdxs.includes(exprIdx);
-	}).join(' ');
+		// remove indexes
+		expr = expr.split(' ').filter((_, exprIdx) => {
+			return !removeIdxs.includes(exprIdx);
+		}).join(' ');
 
-	// 2. loop
-	removeIdxs = [];
-	for (let elemIdx=0; elemIdx < expr.split(' ').length; elemIdx++) {
-		const elem = expr.split(' ')[elemIdx];
+		// 2. loop
+		removeIdxs = [];
+		for (let elemIdx=0; elemIdx < expr.split(' ').length; elemIdx++) {
+			const elem = expr.split(' ')[elemIdx];
 
-		if ("+-%".includes(elem)) {
-			const a = parseFloat(expr.split(' ')[elemIdx - 1])
-			const b = parseFloat(expr.split(' ')[elemIdx + 1])
+			if ("+-".includes(elem)) {
+				const a = parseFloat(expr.split(' ')[elemIdx - 1])
+				const b = parseFloat(expr.split(' ')[elemIdx + 1])
 
-			if (elem == "+") {
-				expr = change(expr, elemIdx+1, a+b);
-			} else if (elem == "-") {
-				expr = change(expr, elemIdx+1, a-b);
-			} else if (elem == "%") {
-				expr = change(expr, elemIdx+1, a%b);
+				if (elem == "+") {
+					expr = this.change(expr, elemIdx+1, a+b);
+				} else if (elem == "-") {
+					expr = this.change(expr, elemIdx+1, a-b);
+				}
+
+				removeIdxs.push(elemIdx-1, elemIdx)
 			}
-
-			removeIdxs.push(elemIdx-1, elemIdx)
 		}
+
+		// remove indexes
+		expr = expr.split(' ').filter((_, exprIdx) => {
+			return !removeIdxs.includes(exprIdx);
+		}).join(' ');
+
+		return parseFloat(expr)
 	}
 
-	// remove indexes
-	expr = expr.split(' ').filter((_, exprIdx) => {
-		return !removeIdxs.includes(exprIdx);
-	}).join(' ');
+	change(s, i, v) {
+		s = s.split(' ');
+		s[i] = v;
 
-	console.log(expr)
-
-	return parseFloat(expr)
+		return s.join(' ');
+	}
 }
-
-// FIXME
-//	2+2 => 4 (2)
-//	4-6 => -2 (4)
-//
-// 1) 4 / 2 * 3 => 6 (0.666)
-// 2) (7 + 3) / (2 * 2 + 1) => 2 (1)
-// 3) (10 / (8 - (4 + 2))) * 3 => 15 (NaN)
-
-
-// calculate_expr('5 * 2 / 3') // 3.33
-// calculate_expr('6 / 3 * 2 - 10') // -6 
-// calculate_expr('5 * 10 / 2 + 1')
-// calculate_expr('2 + 3 * 6 / 2')
-
-// eval('(8 - (4 + 2)) * 3 + 1') // 7
-// eval('5') // 5
-// eval('2 * 3') // 6
-// eval('6 / 3') // 2
-// eval('6 + 3') // 9
-// eval('2 / 0') // ERROR
