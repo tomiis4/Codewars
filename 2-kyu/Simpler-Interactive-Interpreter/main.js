@@ -200,6 +200,8 @@ let comp = new Interpreter
 
 
 function eval(expr) {
+	// convert 3-5 to 3 - 5
+	expr = expr.replace(/(\d*)(\+|\-|\*|\|)(\d*)/g, '$1 $2 $3')
 	let groups = [];
 
 	// get groups
@@ -234,110 +236,78 @@ function eval(expr) {
 	console.log(expr, groups)
 }
 
+function change(s, i, v) {
+	s = s.split(' ');
+	s[i] = v;
+
+	return s.join(' ');
+}
+
+function remove(s, idxs) {
+	s = s.split(' ');
+
+	idxs.forEach(idx => {
+		s.splice(idx, 1)
+	})
+
+	return s.join(' ');
+}
+
 function calculate_expr(expr) {
+// 1. loop -> calculate */
+// 2. loop -> calculate +-
+
+	// 1. loop
 	let removeIdxs = [];
+	for (let elemIdx=0; elemIdx < expr.split(' ').length; elemIdx++) {
+		const elem = expr.split(' ')[elemIdx];
 
-	// *
-	if (expr.includes('*')) {
-		expr = expr.split(' ').map((nums, numIdx) => {
-			if (nums == "*") {
-				const a = parseFloat(expr.split(' ')[numIdx - 1])
-				const b = parseFloat(expr.split(' ')[numIdx + 1])
+		if ("*/".includes(elem)) {
+			const a = parseFloat(expr.split(' ')[elemIdx - 1])
+			const b = parseFloat(expr.split(' ')[elemIdx + 1])
 
-				removeIdxs.push(numIdx-1, numIdx+1)
-				return a * b
-			} else {
-				return nums
+			if (elem == "*") {
+				expr = change(expr, elemIdx+1, a*b);
+			} else if (elem == "/") {
+				expr = change(expr, elemIdx+1, a/b);
 			}
-		}).join(' ');
+
+			removeIdxs.push(elemIdx-1, elemIdx)
+		}
 	}
 
 	// remove indexes
 	expr = expr.split(' ').filter((_, exprIdx) => {
 		return !removeIdxs.includes(exprIdx);
 	}).join(' ');
+
+	// 2. loop
 	removeIdxs = [];
+	for (let elemIdx=0; elemIdx < expr.split(' ').length; elemIdx++) {
+		const elem = expr.split(' ')[elemIdx];
 
-	// /
-	if (expr.includes('/')) {
-		expr = expr.split(' ').map((nums, numIdx) => {
-			if (nums == "/") {
-				const a = parseFloat(expr.split(' ')[numIdx - 1])
-				const b = parseFloat(expr.split(' ')[numIdx + 1])
+		if ("+-%".includes(elem)) {
+			const a = parseFloat(expr.split(' ')[elemIdx - 1])
+			const b = parseFloat(expr.split(' ')[elemIdx + 1])
 
-				removeIdxs.push(numIdx-1, numIdx+1)
-				return a / b
-			} else {
-				return nums
+			if (elem == "+") {
+				expr = change(expr, elemIdx+1, a+b);
+			} else if (elem == "-") {
+				expr = change(expr, elemIdx+1, a-b);
+			} else if (elem == "%") {
+				expr = change(expr, elemIdx+1, a%b);
 			}
-		}).join(' ');
+
+			removeIdxs.push(elemIdx-1, elemIdx)
+		}
 	}
 
 	// remove indexes
 	expr = expr.split(' ').filter((_, exprIdx) => {
 		return !removeIdxs.includes(exprIdx);
 	}).join(' ');
-	removeIdxs = [];
 
-	// +
-	if (expr.includes('+')) {
-		expr = expr.split(' ').map((nums, numIdx) => {
-			if (nums == "+") {
-				const a = parseFloat(expr.split(' ')[numIdx - 1])
-				const b = parseFloat(expr.split(' ')[numIdx + 1])
-
-				removeIdxs.push(numIdx-1, numIdx+1)
-				return a + b
-			} else {
-				return nums
-			}
-		}).join(' ');
-	}
-	// remove indexes
-	expr = expr.split(' ').filter((_, exprIdx) => {
-		return !removeIdxs.includes(exprIdx);
-	}).join(' ');
-	removeIdxs = [];
-
-	// -
-	if (expr.includes('-')) {
-		expr = expr.split(' ').map((nums, numIdx) => {
-			if (nums == "-") {
-				const a = parseFloat(expr.split(' ')[numIdx - 1])
-				const b = parseFloat(expr.split(' ')[numIdx + 1])
-
-				removeIdxs.push(numIdx-1, numIdx+1)
-				return a - b
-			} else {
-				return nums
-			}
-		}).join(' ');
-	}
-	// remove indexes
-	expr = expr.split(' ').filter((_, exprIdx) => {
-		return !removeIdxs.includes(exprIdx);
-	}).join(' ');
-	removeIdxs = [];
-
-	// %
-	if (expr.includes('%')) {
-		expr = expr.split(' ').map((nums, numIdx) => {
-			if (nums == "%") {
-				const a = parseFloat(expr.split(' ')[numIdx - 1])
-				const b = parseFloat(expr.split(' ')[numIdx + 1])
-
-				removeIdxs.push(numIdx-1, numIdx+1)
-				return a % b
-			} else {
-				return nums
-			}
-		}).join(' ');
-	}
-	// remove indexes
-	expr = expr.split(' ').filter((_, exprIdx) => {
-		return !removeIdxs.includes(exprIdx);
-	}).join(' ');
-	removeIdxs = [];
+	console.log(expr)
 
 	return parseFloat(expr)
 }
@@ -353,6 +323,9 @@ function calculate_expr(expr) {
 
 // calculate_expr('5 * 2 / 3') // 3.33
 // calculate_expr('6 / 3 * 2 - 10') // -6 
+// calculate_expr('5 * 10 / 2 + 1')
+// calculate_expr('2 + 3 * 6 / 2')
+
 // eval('(8 - (4 + 2)) * 3 + 1') // 7
 // eval('5') // 5
 // eval('2 * 3') // 6
