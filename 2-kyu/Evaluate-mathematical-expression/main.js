@@ -1,14 +1,9 @@
+// 	expr = expr.replace('\-\-', '+');
+// 	expr = expr.replace('\-\+|\+\-', '-');
 function calc(expr) {
-    console.log(expr);
     if (parseFloat(expr).toString() == expr)
         return parseFloat(expr);
-    expr = removeBrackets(expr);
-    expr = expr.replace(/ /g, '');
-    expr = expr.replace('\-\-', '+');
-    expr = expr.replace('\-\+|\+\-', '-');
-    expr = inverse(expr);
-    expr = expr.replace('\-\-', '');
-    expr = expr.replace('\-\+|\+\-', '-');
+    expr = inverse(expr.replace(/ /g, '')).replace(/ /g, '');
     // convert 3-5 to 3 - 5
     expr = expr.replace(/(\-\d*|\d*)(\+|\-|\*|\/)(\-\d*|\d*)/g, '$1 $2 $3');
     let groups = [];
@@ -25,10 +20,13 @@ function calc(expr) {
         if (group.includes('GROUP_')) {
             group = group.replace(/GROUP_(\d+)/g, (_, groupCapture) => groups[groupCapture]);
         }
-        group = group.replace(/\(|\)/gm, ''); // remove ()
+        // convert 3-5 to 3 - 5
+        group = group.replace(/\(|\)/gm, '').replace(/(\-\d*|\d*)(\+|\-|\*|\/)(\-\d*|\d*)/g, '$1 $2 $3'); // remove () & make from 25-5 25 - 5
+        console.log(group);
         group = calculate_expr(group);
         groups[gIdx] = group;
     });
+    console.log(groups, expr);
     // insert groups to main
     if (expr.includes('GROUP_')) {
         expr = expr.replace(/GROUP_(\d+)/g, (_, groupCapture) => groups[groupCapture]);
@@ -36,53 +34,40 @@ function calc(expr) {
     expr = calculate_expr(expr);
     return parseFloat(expr);
 }
-console.log(calc('12* 123/-(-5 + 2)')); // 982
+// console.log(calc('12* 123/-(-5 + 2)')) // 482
 console.log(calc('((80 - (19)))')); // 61
-console.log(calc('(1 - 2) + -(-(-(-4)))')); // 3
-function removeBrackets(expr) {
-    while (expr.startsWith('(') && expr.endsWith(')')) {
-        let temp = expr.split('');
-        temp.pop();
-        temp.shift();
-        expr = temp.join('');
-    }
-    return expr;
-}
+// console.log(calc('(1 - 2) + -(-(-(-4)))'))  // 3
+// console.log(calc('-(-(-(-4)))'))  // 4
+// -(-(-(-4))
+//		(-1 * (-1 * (-1 * -4)))
+// -(-5+2)
+//		(-1 * (-5+2))
+// -(19)
+//		(-1 * (19))
 function inverse(expr) {
-    const matches = expr.match(/(?<=\-\()(.*?)(?=\))/g);
-    if (matches == null)
-        return expr;
-    const inversed = matches.map((match) => {
-        let x = match.split('').map((elem, idx) => {
-            if (idx == 0) {
-                if (elem == '-')
-                    return '';
-                if (elem == '+')
-                    return '-';
-                return '-' + elem;
-            }
-            else {
-                if (elem == '-')
-                    return '+';
-                if (elem == '+')
-                    return '-';
-                return elem;
-            }
-        }).join('');
-        return x;
-    });
-    // 	inversed.forEach((m) => {
-    matches.forEach((m) => {
-        expr = expr.replace(/(\-\()(.*?)(\))/, '-' + m.replace(/(\-\d*|\d*)(\+|\-|\*|\/)(\-\d*|\d*)/g, '$1 $2 $3'));
-    });
-    console.log(expr.replace(/\-\(/g, '-1 * ('));
+    // between -()
+    let matches = expr.match(/(\-\()(.*)(\))/);
+    let n = 0;
+    while (matches != null) {
+        if (n == 0) {
+            expr = expr.replace(/(\-\()(.*)(\))/, '(-1 * ($2))');
+        }
+        expr = expr.replace(/(\-\()(.*)(\))/, '-1 * ($2)');
+        matches = expr.match(/(\-\()(.*)(\))/);
+        n++;
+    }
+    ;
+    const singeNumber = expr.match(/\(\-(\d*)\)/g);
+    if (singeNumber != null) {
+        expr = expr.replace(/(\()(\-\d*)(\))/g, '$2');
+    }
     return expr;
 }
 function calculate_expr(expr) {
     // fix double spaces
     expr = expr.replace(/  /g, ' ');
-    // 1. loop -> calculate */%
-    // 2. loop -> calculate +-
+    // 	1. loop -> calculate */%
+    // 	2. loop -> calculate +-
     // 1. loop
     let removeIdxs = [];
     for (let elemIdx = 0; elemIdx < expr.split(' ').length; elemIdx++) {
