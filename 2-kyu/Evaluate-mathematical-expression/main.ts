@@ -1,5 +1,3 @@
-// 	expr = expr.replace('\-\-', '+');
-// 	expr = expr.replace('\-\+|\+\-', '-');
 function calc(expr: string): number {
 	if (parseFloat(expr).toString() == expr) return parseFloat(expr) 
 
@@ -8,6 +6,7 @@ function calc(expr: string): number {
 	expr = expr.replace(/(\-\d*|\d*)(\+|\-|\*|\/)(\-\d*|\d*)/g, '$1 $2 $3')
 	let groups: string[] = [];
 
+	console.log("Calc ()", expr)
 	// get groups
 	const groupRegex = /\(([^()]*)\)/;
 	while (expr.match(groupRegex) != null) {
@@ -17,6 +16,7 @@ function calc(expr: string): number {
 		groups.push(splitGroups[0])
 		expr = expr.replace(groupRegex, `GROUP_${groups.length-1}`)
 	}
+	console.log("Groups: ", groups)
 
 
 	// calculate groups
@@ -24,16 +24,24 @@ function calc(expr: string): number {
 		if (group.includes('GROUP_')) {
 			group = group.replace(/GROUP_(\d+)/g, (_, groupCapture) => groups[groupCapture]);
 		}
+		console.log("before Rgx", group)
 
-	// convert 3-5 to 3 - 5
-		group = group.replace(/\(|\)/gm, '').replace(/(\-\d*|\d*)(\+|\-|\*|\/)(\-\d*|\d*)/g, '$1 $2 $3'); // remove () & make from 25-5 25 - 5
-		console.log(group)
+		group = group.replace(/\(|\)/gm, ''); // remove () & make from 25-5 25 - 5
+
+		if (group.includes('*') || group.includes('/')) {
+			group = group.replace(/-\s*/g, '-'); // make from 25-5 25 - 5
+		} else {
+			expr = expr.replace(/(\-\d*|\d*)(\+|\-|\*|\/)(\-\d*|\d*)/g, '$1 $2 $3')
+		}
+
+		console.log("after Rgx", group)
 		group = calculate_expr(group)
+		console.log("after calc", group)
 
 		groups[gIdx] = group;
 	})
+	console.log("Calc groups", groups)
 
-	console.log(groups, expr)
 
 	// insert groups to main
 	if (expr.includes('GROUP_')) {
@@ -45,10 +53,15 @@ function calc(expr: string): number {
 	return parseFloat(expr)
 }
 
+console.log("-- START --")
 // console.log(calc('12* 123/-(-5 + 2)')) // 482
-console.log(calc('((80 - (19)))')) // 61
+// console.log(calc('((80 - (19)))')) // 61
 // console.log(calc('(1 - 2) + -(-(-(-4)))'))  // 3
 // console.log(calc('-(-(-(-4)))'))  // 4
+// console.log(calc('-(-(-(-4)))'))  // 4
+// console.log(calc('2 / (2 + 3) * 4.33 - -6'))  // 4
+console.log(calc('2 /2+3 * 4.75- -6'))  // 4
+console.log("--  END  --")
 // -(-(-(-4))
 //		(-1 * (-1 * (-1 * -4)))
 // -(-5+2)
@@ -63,7 +76,7 @@ function inverse(expr: string): string {
 	while (matches != null) {
 
 		if (n == 0) {
-		expr = expr.replace(/(\-\()(.*)(\))/, '(-1 * ($2))')
+			expr = expr.replace(/(\-\()(.*)(\))/, '(-1 * ($2))')
 		}
 
 		expr = expr.replace(/(\-\()(.*)(\))/, '-1 * ($2)')
@@ -82,7 +95,13 @@ function inverse(expr: string): string {
 
 function calculate_expr(expr: string): string {
 	// fix double spaces
-	expr = expr.replace(/  /g, ' ');
+	expr = expr.replace(/  /g, ' ').replace(/(\-)(\s+)(\-)/g, '+').trim();
+
+	if (expr.split(' ').length == 1) {
+		expr = expr.replace(/(\-|\+|\/\*)/g, ' $1 ')
+	}
+
+	console.log("calc expr", expr)
 
 // 	1. loop -> calculate */%
 // 	2. loop -> calculate +-

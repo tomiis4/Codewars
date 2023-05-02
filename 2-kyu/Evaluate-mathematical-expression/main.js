@@ -1,5 +1,3 @@
-// 	expr = expr.replace('\-\-', '+');
-// 	expr = expr.replace('\-\+|\+\-', '-');
 function calc(expr) {
     if (parseFloat(expr).toString() == expr)
         return parseFloat(expr);
@@ -7,6 +5,7 @@ function calc(expr) {
     // convert 3-5 to 3 - 5
     expr = expr.replace(/(\-\d*|\d*)(\+|\-|\*|\/)(\-\d*|\d*)/g, '$1 $2 $3');
     let groups = [];
+    console.log("Calc ()", expr);
     // get groups
     const groupRegex = /\(([^()]*)\)/;
     while (expr.match(groupRegex) != null) {
@@ -15,18 +14,26 @@ function calc(expr) {
         groups.push(splitGroups[0]);
         expr = expr.replace(groupRegex, `GROUP_${groups.length - 1}`);
     }
+    console.log("Groups: ", groups);
     // calculate groups
     groups.forEach((group, gIdx) => {
         if (group.includes('GROUP_')) {
             group = group.replace(/GROUP_(\d+)/g, (_, groupCapture) => groups[groupCapture]);
         }
-        // convert 3-5 to 3 - 5
-        group = group.replace(/\(|\)/gm, '').replace(/(\-\d*|\d*)(\+|\-|\*|\/)(\-\d*|\d*)/g, '$1 $2 $3'); // remove () & make from 25-5 25 - 5
-        console.log(group);
+        console.log("before Rgx", group);
+        group = group.replace(/\(|\)/gm, ''); // remove () & make from 25-5 25 - 5
+        if (group.includes('*') || group.includes('/')) {
+            group = group.replace(/-\s*/g, '-'); // make from 25-5 25 - 5
+        }
+        else {
+            expr = expr.replace(/(\-\d*|\d*)(\+|\-|\*|\/)(\-\d*|\d*)/g, '$1 $2 $3');
+        }
+        console.log("after Rgx", group);
         group = calculate_expr(group);
+        console.log("after calc", group);
         groups[gIdx] = group;
     });
-    console.log(groups, expr);
+    console.log("Calc groups", groups);
     // insert groups to main
     if (expr.includes('GROUP_')) {
         expr = expr.replace(/GROUP_(\d+)/g, (_, groupCapture) => groups[groupCapture]);
@@ -34,10 +41,15 @@ function calc(expr) {
     expr = calculate_expr(expr);
     return parseFloat(expr);
 }
+console.log("-- START --");
 // console.log(calc('12* 123/-(-5 + 2)')) // 482
-console.log(calc('((80 - (19)))')); // 61
+// console.log(calc('((80 - (19)))')) // 61
 // console.log(calc('(1 - 2) + -(-(-(-4)))'))  // 3
 // console.log(calc('-(-(-(-4)))'))  // 4
+// console.log(calc('-(-(-(-4)))'))  // 4
+// console.log(calc('2 / (2 + 3) * 4.33 - -6'))  // 4
+console.log(calc('2 /2+3 * 4.75- -6')); // 4
+console.log("--  END  --");
 // -(-(-(-4))
 //		(-1 * (-1 * (-1 * -4)))
 // -(-5+2)
@@ -65,7 +77,11 @@ function inverse(expr) {
 }
 function calculate_expr(expr) {
     // fix double spaces
-    expr = expr.replace(/  /g, ' ');
+    expr = expr.replace(/  /g, ' ').replace(/(\-)(\s+)(\-)/g, '+').trim();
+    if (expr.split(' ').length == 1) {
+        expr = expr.replace(/(\-|\+|\/\*)/g, ' $1 ');
+    }
+    console.log("calc expr", expr);
     // 	1. loop -> calculate */%
     // 	2. loop -> calculate +-
     // 1. loop
