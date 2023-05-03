@@ -21,7 +21,7 @@ function calc(expr) {
             group = group.replace(/GROUP_(\d+)/g, (_, groupCapture) => groups[groupCapture]);
         }
         console.log("before Rgx", group);
-        group = group.replace(/\(|\)/gm, ''); // remove () & make from 25-5 25 - 5
+        group = group.replace(/\(|\)/gm, ''); // remove ()
         if (group.includes('*') || group.includes('/')) {
             group = group.replace(/-\s*/g, '-'); // make from 25-5 25 - 5
         }
@@ -46,9 +46,9 @@ console.log("-- START --");
 // console.log(calc('((80 - (19)))')) // 61
 // console.log(calc('(1 - 2) + -(-(-(-4)))'))  // 3
 // console.log(calc('-(-(-(-4)))'))  // 4
-// console.log(calc('-(-(-(-4)))'))  // 4
 // console.log(calc('2 / (2 + 3) * 4.33 - -6'))  // 4
-console.log(calc('2 /2+3 * 4.75- -6')); // 4
+// console.log(calc('2 /2+3 * 4.75- -6'))  // 4
+console.log(calc('(123.45*(678.90 / (-2.5+ 11.5)-(((80 -(19))) *33.25)) / 20) - (123.45*(678.90 / (-2.5+ 11.5)-(((80 -(19))) *33.25)) / 20) + (13 - 2)/ -(-11) ')); // 4
 console.log("--  END  --");
 // -(-(-(-4))
 //		(-1 * (-1 * (-1 * -4)))
@@ -77,9 +77,12 @@ function inverse(expr) {
 }
 function calculate_expr(expr) {
     // fix double spaces
-    expr = expr.replace(/  /g, ' ').replace(/(\-)(\s+)(\-)/g, '+').trim();
+    expr = expr.replace(/  /g, ' ').replace(/(\-)(\s+)(\-)/g, '+ ').replace(/  /, ' ').trim();
     if (expr.split(' ').length == 1) {
         expr = expr.replace(/(\-|\+|\/\*)/g, ' $1 ');
+    }
+    if (expr.startsWith('- ')) {
+        expr = expr.replace(/\- /, '-');
     }
     console.log("calc expr", expr);
     // 	1. loop -> calculate */%

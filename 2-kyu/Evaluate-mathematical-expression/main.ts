@@ -26,7 +26,7 @@ function calc(expr: string): number {
 		}
 		console.log("before Rgx", group)
 
-		group = group.replace(/\(|\)/gm, ''); // remove () & make from 25-5 25 - 5
+		group = group.replace(/\(|\)/gm, ''); // remove ()
 
 		if (group.includes('*') || group.includes('/')) {
 			group = group.replace(/-\s*/g, '-'); // make from 25-5 25 - 5
@@ -58,16 +58,11 @@ console.log("-- START --")
 // console.log(calc('((80 - (19)))')) // 61
 // console.log(calc('(1 - 2) + -(-(-(-4)))'))  // 3
 // console.log(calc('-(-(-(-4)))'))  // 4
-// console.log(calc('-(-(-(-4)))'))  // 4
 // console.log(calc('2 / (2 + 3) * 4.33 - -6'))  // 4
-console.log(calc('2 /2+3 * 4.75- -6'))  // 4
+// console.log(calc('2 /2+3 * 4.75- -6'))  // 4
+console.log(calc('(123.45*(678.90 / (-2.5+ 11.5)-(((80 -(19))) *33.25)) / 20) - (123.45*(678.90 / (-2.5+ 11.5)-(((80 -(19))) *33.25)) / 20) + (13 - 2)/ -(-11) '))  // 4
 console.log("--  END  --")
-// -(-(-(-4))
-//		(-1 * (-1 * (-1 * -4)))
-// -(-5+2)
-//		(-1 * (-5+2))
-// -(19)
-//		(-1 * (19))
+
 
 function inverse(expr: string): string {
 	// between -()
@@ -95,11 +90,16 @@ function inverse(expr: string): string {
 
 function calculate_expr(expr: string): string {
 	// fix double spaces
-	expr = expr.replace(/  /g, ' ').replace(/(\-)(\s+)(\-)/g, '+').trim();
+	expr = expr.replace(/  /g, ' ').replace(/(\-)(\s+)(\-)/g, '+ ').replace(/  /, ' ').trim();
 
 	if (expr.split(' ').length == 1) {
 		expr = expr.replace(/(\-|\+|\/\*)/g, ' $1 ')
 	}
+
+	if (expr.startsWith('- ')) {
+		expr = expr.replace(/\- /, '-')
+	}
+
 
 	console.log("calc expr", expr)
 
