@@ -42,15 +42,21 @@ function calc(expr) {
             group = group.replace(/GROUP_(\d+)/g, (_, groupCapture) => groups[groupCapture]);
         }
         // remove ( and )
+        // FIXME: Fixes
         group = group.replace(regex.prentecies, ''); // remove ()
+        group = inverse(group.replace(/ /g, ''));
+        group = ' ' + group.replace(regex.splitOperator, '$1 $2 $3');
+        group = group.replace(regex.negativeOperator, ' $2$4');
         group = calculate_expr(group);
         groups[gIdx] = group;
     });
     console.log("Calc groups:", groups);
+    console.log("Before final:", expr);
     // insert groups to main
     if (expr.includes('GROUP_')) {
         expr = expr.replace(/GROUP_(\d+)/g, (_, groupCapture) => groups[groupCapture]);
     }
+    console.log("Before final:", expr);
     // FIXME: Fixes
     expr = inverse(expr.replace(/ /g, ''));
     expr = ' ' + expr.replace(regex.splitOperator, '$1 $2 $3');
@@ -60,8 +66,9 @@ function calc(expr) {
     console.log("--  END  --\n");
     return parseFloat(expr);
 }
+// -3207 - -3086
 // calc('(123.45*(678.90 / (-2.5+ 11.5)-(((80 -(19))) *33.25)) / 20) - (123.45*(678.90 / (-2.5+ 11.5)-(((80 -(19))) *33.25)) / 20) + (13 - 2)/ -(-11)')
-calc('(123.45 * (678.90/9 -(61*33.25)) / 20) - (123.45*(678.90 / 9-(61 *33.25)) / 20) + 11 / 11 ');
+calc('(123.45*(678.90 / (-2.5+ 11.5)-(((80 -(19))) *33.25)) / 20) - (123.45*(678.90 / (-2.5+ 11.5)-(((80 -(19))) *33.25)) / 20)');
 function calculate_expr(expr) {
     console.log("calc 1)", expr);
     expr = expr.trim();
