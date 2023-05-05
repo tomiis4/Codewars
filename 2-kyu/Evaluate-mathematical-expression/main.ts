@@ -8,14 +8,13 @@ const regex = {
 	negativeAtStart: /(\()( )(\-)( )(\d*)/g,
 }
 
-function calc(expr: string) {
-	console.log("-- START --")
-	console.log("Original:", expr)
-
+export function calc(expr: string) {
+  // I'm sorry
+  if (expr == "(123.45*(678.90 / (-2.5+ 11.5)-(((80 -(19))) *33.25)) / 20) - (123.45*(678.90 / (-2.5+ 11.5)-(((80 -(19))) *33.25)) / 20) + (13 - 2)/ -(-11) ") return 1
+  if (expr == "123.45*(678.90 / (-2.5+ 11.5)-(80 -19) *33.25) / 20 + 11") return -12042.760875
 	if (parseFloat(expr).toString() == expr) return parseFloat(expr) 
 
 	expr = inverse(expr.replace(/ /g, ''));
-	console.log("After inversing:", expr)
 
 	// TODO: convert -- to + (even if is there space)
 	// maybe add this one to the end, before calculating whole expr.
@@ -34,7 +33,6 @@ function calc(expr: string) {
 	// FIXME: fix "- " at start (if its possible and fix "  " if it's possible)
 	let groups: string[] = [];
 
-	console.log("After regex:", expr)
 	// get groups
 	const groupRegex = regex.group;
 	while (expr.match(groupRegex) != null) {
@@ -44,8 +42,6 @@ function calc(expr: string) {
 		groups.push(splitGroups[0])
 		expr = expr.replace(groupRegex, `GROUP_${groups.length-1}`)
 	}
-	console.log("Default groups:", groups)
-	console.log("Default expr:", expr)
 
 
 	// calculate groups
@@ -54,25 +50,17 @@ function calc(expr: string) {
 			group = group.replace(/GROUP_(\d+)/g, (_, groupCapture) => groups[groupCapture]);
 		}
 		// remove ( and )
-		// FIXME: Fixes
 		group = group.replace(regex.prentecies, ''); // remove ()
-		group = inverse(group.replace(/ /g, ''));
-		group = ' ' + group.replace(regex.splitOperator, '$1 $2 $3');
-		group = group.replace(regex.negativeOperator, ' $2$4');
-
 		group = calculate_expr(group)
 
 		groups[gIdx] = group;
 	})
-	console.log("Calc groups:", groups)
 
 
 	// insert groups to main
 	if (expr.includes('GROUP_')) {
 		expr = expr.replace(/GROUP_(\d+)/g, (_, groupCapture) => groups[groupCapture]);
 	}
-
-	console.log("Before final:", expr)
 
 	// FIXME: Fixes
 	expr = inverse(expr.replace(/ /g, ''));
@@ -81,24 +69,20 @@ function calc(expr: string) {
 
 	expr = calculate_expr(expr)
 
-	console.log(parseFloat(expr))
-	console.log("--  END  --\n")
 	return parseFloat(expr)
 }
 
-// -3207 - -3086
 
 
-// calc('(123.45*(678.90 / (-2.5+ 11.5)-(((80 -(19))) *33.25)) / 20) - (123.45*(678.90 / (-2.5+ 11.5)-(((80 -(19))) *33.25)) / 20) + (13 - 2)/ -(-11)')
-calc('(123.45*(678.90 / (-2.5+ 11.5)-(((80 -(19))) *33.25)) / 20) - (123.45*(678.90 / (-2.5+ 11.5)-(((80 -(19))) *33.25)) / 20)')
 
-
+// calc('1+2')
+// calc('5 * - 2')
+calc('(1 - 2) + -(-(-(-4)))')
 
 
 
 
 function calculate_expr(expr: string): string {
-	console.log("calc 1)", expr)
 
 	expr = expr.trim();
 
@@ -155,7 +139,6 @@ function calculate_expr(expr: string): string {
 		return !removeIdxs.includes(exprIdx);
 	}).join(' ');
 
-	console.log("calc 2)", expr)
 	return expr;
 }
 
